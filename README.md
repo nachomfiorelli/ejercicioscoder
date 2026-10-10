@@ -1,13 +1,54 @@
-sql-select-fundamentals
+# RetailPro: análisis de ventas con SQL y Power BI
 
-Consultas SQL básicas sobre la tabla sales de TechStore, escritas para el equipo de finanzas.
+Proyecto del curso de análisis de datos. RetailPro es una distribuidora de tecnología. El objetivo del proyecto es responder preguntas de negocio sobre ventas, clientes y productos, desde la base de datos hasta el dashboard ejecutivo.
 
-¿Por qué es mala práctica usar SELECT * en producción?
-Rendimiento: SELECT * trae todas las columnas de la tabla, incluso las que la consulta no necesita. Con tablas grandes o con columnas pesadas (texto largo, JSON, blobs), esto significa transferir y procesar mucha más información de la necesaria, lo que hace la consulta más lenta y consume más memoria y ancho de banda — tanto en la base de datos como en la aplicación que la consume.
-Mantenibilidad: si alguien agrega, elimina o renombra una columna en la tabla sales, cualquier reporte o aplicación que use SELECT * cambia su comportamiento sin aviso. Un reporte que "misteriosamente" trae una columna nueva, o una aplicación que se rompe porque esperaba una columna que ya no existe, son errores silenciosos y difíciles de rastrear. Declarar explícitamente las columnas que se necesitan (como en la Consulta 2) hace que el código sea predecible y fácil de mantener.
-Seguridad (bonus): SELECT * puede exponer columnas sensibles (por ejemplo, datos de contacto o precios de costo) a consumidores del reporte que no deberían verlas, simplemente porque se agregaron a la tabla más adelante y nadie las excluyó explícitamente.
-¿Por qué son importantes los alias para un stakeholder no técnico?
+## Herramientas
 
-Los nombres de columnas en una base de datos están pensados para quien la diseña, no para quien consume el reporte. total_amount es un nombre técnico en inglés que asume que quien lo lee sabe que se refiere al monto total de una venta. Una persona del equipo de finanzas que abre ese reporte no tiene por qué saber inglés técnico ni el diccionario de datos del sistema.
+- **SQL Server** y **SQL Server Management Studio (SSMS)**: base de datos y consultas.
+- **Power BI**: modelo de datos, medidas DAX y dashboard. Los archivos `.pbix` no están en este repositorio.
+- **GitHub**: control de versiones y entrega de los scripts.
 
-Con un alias, SELECT total_amount AS monto_total FROM sales devuelve una columna llamada monto_total: cualquier persona de finanzas entiende inmediatamente qué representa esa cifra sin necesitar contexto adicional ni preguntarle al equipo de datos. Es la diferencia entre entregar un dato y entregar información lista para usar. En la Consulta 3 del archivo consultas_basicas.sql aplicamos el mismo criterio con order_date AS fecha_pedido, product_name AS nombre_producto y quantity AS cantidad_unidades.
+## Base de datos `Ventas_Tech_DB`
+
+| Tabla | Columnas |
+|---|---|
+| `categorias` | `id_categoria`, `nombre_categoria`, `descripcion` |
+| `clientes` | `id_cliente`, `nombre`, `email`, `ciudad`, `fecha_registro` |
+| `productos` | `id_producto`, `nombre_producto`, `id_categoria`, `precio`, `stock`, `activo` |
+| `ventas` | `id_venta`, `id_cliente`, `id_producto`, `cantidad`, `precio_unitario`, `fecha_venta` |
+
+## Estructura del repositorio
+
+```
+.
+├── README.md
+├── ventas_tech_db.sql           # Crea el esquema y carga los datos de ejemplo
+├── consultas_basicas.sql        # Ejercicio previo (tabla sales de TechStore), fuera del flujo RetailPro
+└── RetailPro/
+    ├── m4_consultas_negocio.sql # Consultas de agregación y hallazgos
+    └── m5_consultas_joins.sql   # Consultas con JOIN
+```
+
+## Cómo ejecutar los scripts
+
+1. Abrí SSMS y conectate a tu instancia de SQL Server.
+2. Creá la base ejecutando `CREATE DATABASE Ventas_Tech_DB;`. El script no la crea: esa línea está comentada.
+3. Elegí `Ventas_Tech_DB` en el desplegable de bases de datos y ejecutá `ventas_tech_db.sql`. El script borra las tablas con esos nombres y las vuelve a crear con los datos de ejemplo, así que no hay que ejecutarlo en otra base.
+4. Abrí `RetailPro/m4_consultas_negocio.sql` y `RetailPro/m5_consultas_joins.sql`. Seleccioná **una consulta por vez** y presioná **F5**. Si ejecutás el archivo completo, los resultados de todas las consultas aparecen juntos.
+
+> Los scripts usan sintaxis de SQL Server. Para otro motor, por ejemplo PostgreSQL, hay que adaptar `MONTH(fecha_venta)` a `EXTRACT(MONTH FROM fecha_venta)` y `TOP 5` a `LIMIT 5`.
+
+## Qué contiene cada script
+
+| Script | Contenido |
+|---|---|
+| `m4_consultas_negocio.sql` | Resumen ejecutivo mensual, top 5 de productos por facturación, clientes recurrentes y clasificación de meses contra el promedio, más 3 hallazgos de negocio. |
+| `m5_consultas_joins.sql` | Vista base con `INNER JOIN` de 4 tablas, clientes sin ventas, productos sin ventas y consolidado por zona (CABA / Interior) con `UNION ALL`. |
+
+## Limitaciones de los datos
+
+Los datos de ejemplo de `ventas` corresponden a un único mes (marzo de 2024). Por eso las consultas de comparación entre meses, como la clasificación contra el promedio mensual, no permiten distinguir meses mejores o peores.
+
+## Autor
+
+Ignacio Martínez
